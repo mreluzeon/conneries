@@ -10,6 +10,7 @@ data LispValue = Number Float
                | Word String
                | List [LispValue]
                | Quoted [LispValue]
+               | Log String
                | Function ([LispValue] -> LispValue)
                -- | BuiltInUnary (LispValue) -> LispValue
                -- | BuiltInBinary (LispValue, LispValue) -> LispValue
@@ -24,4 +25,5 @@ instance Show LispValue where
   show (Word      a) = (((++) "Word ") . show) a
   show (List      a) = (((++) "List ") . show) a
   show (Quoted    a) = (((++) "Quoted ") . show) a
+  show (Log       a) = (((++) "Log ") . show) a
   show (Function  _) = "Function"

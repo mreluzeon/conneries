@@ -1,35 +1,32 @@
 module Executor where
 
-import qualified Data.Map as M
 import Control.Monad.State
+import Data.Ratio
 
 import Types
 
-initialState = M.fromList [("+", Function plus),
-                           ("r+", Function rplus)]
+-- uUpdate k v hash = if M.member k hash
+--                    then M.update (\_ -> v) k hash
+--                    else M.insert k v hash
 
-uUpdate k v hash = if M.member k hash
-                   then M.update (\a-> Just v) k hash
-                   else M.insert k v hash
+-- executor (List (x:xs)) = Function (\[x] -> x)
+executor (List (x:xs)) = execFunction x xs
+executor a@(Number _) = a
+executor a@(Ratio _) = a
+executor a@(String _) = a
+executor a@(Bool _) = a
+executor a@(Word _) = a
+executor a@(Keyword _) = a
 
-executor :: LispValue -> State (M.Map String LispValue) (M.Map String LispValue)
-executor (List (x:xs)) = do
-  env <- get
-  func <- env `lookup` x
-  res <- execute func args
-  put $ updateState $ res
-  executor 
-executor (List []) = return $ get
+execFunction (Word "+") (x:xs) = Number $ foldl (\a c -> fromLispNumber c + a) (fromLispNumber x) xs
+execFunction (Word "-") (x:xs) = Number $ foldl (\a c -> a - (fromLispNumber c)) (fromLispNumber x) xs
 
-if 
-
-executeFunc (Function func) args = func args
-
+fromLispNumber :: LispValue -> Float
 fromLispNumber (Number x) = x
-fromLispRatio  (Ratio  x) = x
+fromLispNumber (Ratio x) = fromRational $ toRational x
 
-plus :: [LispValue] -> LispValue
-plus = Number . foldl (\a c -> fromLispNumber c + a) 0
+exec (Left a)  = Log $ show a
+exec (Right a) = executor a
 
-rplus :: [LispValue] -> LispValue
-rplus = Ratio . foldl (\a c -> fromLispRatio c + a) 0
+-- fromLispRatio (Number x) = toRational x
+-- fromLispRatio (Ratio  x) = x
