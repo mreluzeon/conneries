@@ -2,8 +2,7 @@ module Types where
 
 import Data.Ratio
 
-data LispValue = Number Float
-               | Ratio (Ratio Int)
+data LispValue = Ratio Rational
                | Bool Bool
                | String String
                | Keyword String
@@ -17,7 +16,6 @@ data LispValue = Number Float
                -- | BuiltInTernary (LispValue, LispValue, LispValue) -> LispValue
 
 instance Show LispValue where
-  show (Number    a) = (((++) "Number ") . show) a
   show (Ratio     a) = (((++) "Ratio ") . show) a
   show (Bool      a) = (((++) "Bool ") . show) a
   show (String    a) = (((++) "String ") . show) a
