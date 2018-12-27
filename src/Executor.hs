@@ -58,6 +58,7 @@ execFunction (Word "*") (x:xs) = foldl (\a c -> c * a) x xs
 execFunction (Word "/") (x:xs) = foldl (\a c -> a / c) x xs
 execFunction (Word "float") [x] = String $ show $ fromrat x
 execFunction (Word "abs") [x] = abs x
+execFunction (Word "print") (x:_) = Printer $ putStrLn $ show x
 
 exec (Left a)  = Log $ show a
 exec (Right a) = executor a
