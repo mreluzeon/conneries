@@ -29,3 +29,40 @@
         (return {:type :string
                  :value (apply str val)})))
 
+(def keyword-parser
+  (bind [val (>> (sym* \') (many1 (none-of* " \n()")))]
+        (return {:type :keyword
+                 :value (keyword (apply str val))})))
+
+(def word-parser
+  (bind [val (many1 (none-of* " \n()"))]
+        (return {:type :word
+                 :value (keyword (apply str val))})))
+
+(declare quotedlist-parser)
+(declare list-parser)
+
+(def sth-parser
+  (<|> (<:> list-parser)
+       (<:> quotedlist-parser)
+       (<:> int-parser)
+       (<:> float-parser)
+       (<:> ratio-parser)
+       (<:> bool-parser)
+       (<:> string-parser)
+       (<:> keyword-parser)
+       (<:> word-parser)))
+
+(def quotedlist-parser
+  (bind [_ (sym* \()
+         vals (sep-by (many1 (one-of* " \n,\t")) sth-parser)
+         _ (sym* \))]
+        (return {:type :quotedlist
+                 :value vals})))
+
+(def list-parser
+  (bind [_ (sym* \()
+         vals (sep-by1 (many1 (one-of* " \n,\t")) sth-parser)
+         _ (sym* \))]
+        (return {:type :list
+                 :value vals})))
