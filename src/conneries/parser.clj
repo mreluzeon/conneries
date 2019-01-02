@@ -1,0 +1,31 @@
+(ns conneries.parser
+  (:use [blancas.kern.core]))
+
+(def int-parser
+  (bind [number (<+> (many1 (one-of* "1234567890-")))]
+        (return {:type :int
+                 :value (Integer/parseInt number)})))
+
+(def float-parser
+  (bind [number (<+> (many1 (one-of* "1234567890-")) (sym* \.) (many1 (one-of* "1234567890")))]
+        (return {:type :float
+                 :value (Float/parseFloat number)})))
+
+(def ratio-parser
+  (bind [enumerator (many1 (one-of* "1234567890-"))
+         _ (sym* \/)
+         denumerator (many1 (one-of* "1234567890"))]
+        (return {:type :ratio
+                 :value (/ (Integer/parseInt (apply str enumerator))
+                           (Integer/parseInt (apply str denumerator)))})))
+
+(def bool-parser
+  (bind [bool (<|> (token* "#t") (token* "#f"))]
+        (return {:type :bool
+                 :value (if (= bool "#t") true false)})))
+
+(def string-parser
+  (bind [val (between (sym* \") (sym* \") (many1 (none-of* "\"")))]
+        (return {:type :string
+                 :value (apply str val)})))
+
