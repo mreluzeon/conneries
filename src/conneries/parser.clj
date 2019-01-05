@@ -45,9 +45,9 @@
 (def sth-parser
   (<|> (<:> list-parser)
        (<:> quotedlist-parser)
-       (<:> int-parser)
        (<:> float-parser)
        (<:> ratio-parser)
+       (<:> int-parser)
        (<:> bool-parser)
        (<:> string-parser)
        (<:> keyword-parser)
