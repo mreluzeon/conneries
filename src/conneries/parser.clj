@@ -3,19 +3,19 @@
 
 (def int-parser
   (bind [number (<+> (many1 (one-of* "1234567890-")))]
-        (return {:type :int
+        (return {:type :number
                  :value (Integer/parseInt number)})))
 
 (def float-parser
   (bind [number (<+> (many1 (one-of* "1234567890-")) (sym* \.) (many1 (one-of* "1234567890")))]
-        (return {:type :float
+        (return {:type :number
                  :value (Float/parseFloat number)})))
 
 (def ratio-parser
   (bind [enumerator (many1 (one-of* "1234567890-"))
          _ (sym* \/)
          denumerator (many1 (one-of* "1234567890"))]
-        (return {:type :ratio
+        (return {:type :number
                  :value (/ (Integer/parseInt (apply str enumerator))
                            (Integer/parseInt (apply str denumerator)))})))
 
@@ -39,19 +39,7 @@
         (return {:type :word
                  :value (keyword (apply str val))})))
 
-(declare quotedlist-parser)
-(declare list-parser)
-
-(def sth-parser
-  (<|> (<:> list-parser)
-       (<:> quotedlist-parser)
-       (<:> float-parser)
-       (<:> ratio-parser)
-       (<:> int-parser)
-       (<:> bool-parser)
-       (<:> string-parser)
-       (<:> keyword-parser)
-       (<:> word-parser)))
+(declare sth-parser)
 
 (def quotedlist-parser
   (bind [_ (sym* \()
@@ -66,3 +54,14 @@
          _ (sym* \))]
         (return {:type :list
                  :value vals})))
+
+(def sth-parser
+  (<|> (<:> list-parser)
+       (<:> quotedlist-parser)
+       (<:> float-parser)
+       (<:> ratio-parser)
+       (<:> int-parser)
+       (<:> bool-parser)
+       (<:> string-parser)
+       (<:> keyword-parser)
+       (<:> word-parser)))
