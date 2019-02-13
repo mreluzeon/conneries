@@ -5,7 +5,7 @@
   (vector name
           (hash-map :type :fn :value {:name name :type :built-in})))
 
-(def built-ins ["+" "-" "if" "=" "print"])
+(def built-ins [:+ :- :if := :print :define! :set! :do])
 
 (def state
   (atom (apply hash-map
@@ -28,7 +28,7 @@
 
 (defmethod read-ast :bool [obj] obj)
 
-(defmethod read-ast :srting [obj] obj)
+(defmethod read-ast :string [obj] obj)
 
 (defmethod read-ast :quotedlist [obj] obj)
 
@@ -39,32 +39,46 @@
 ;; magic starts here
 
 ;; word returns ^^^ these values or function
-;; word always resolves from the memory
+;; word ALWAYS RESOLVES from the memory
 (defmethod read-ast :word [obj]
   (@state (:value obj)))
 
-;; it just returns something
+;; list ALWAYS RESOLVES!
 (defmethod read-ast :list [obj]
   (let [func (first (:value obj))
         args (rest (:value obj))]
     (execute-function (read-ast func) args)))
 
 (defmethod read-ast :default [obj]
-  (throw (java.lang.IllegalArgument. "OHOHOOO MOYA OBORONA")))
+  (throw (new Exception "ERR")))
+
+(defn my-do [[x & xs]]
+  (if xs
+    (do (read-ast x) (recur xs))
+    (read-ast x)))
 
 (defn execute-built-in-function [name args]
   (case name
-    "+" {:value (reduce #(+ %1 (:value (read-ast %2))) 0 args) :type :number}
-    "-" {:value (reduce #(- %1 (:value (read-ast %2)))
-                        (:value (read-ast (first args)))
-                        (rest args)) :type :number}
-    "=" {:value (reduce #(= %1 %2) (first args) (rest args)) :type :bool}
-    "print" {:value (do (print (:value (first args))) (:value (first args)))
-             :type (:type (first args))}
-    "if" (if (:value (read-ast (first args)))
-           (nth args 1)
-           (nth args 2))
-    {:value 1 :type :nil}))
+    :+ {:value (reduce #(+ %1 (:value (read-ast %2))) 0 args) :type :number}
+    :- {:value (reduce #(- %1 (:value (read-ast %2)))
+                       (:value (read-ast (first args)))
+                       (rest args)) :type :number}
+    := {:value (apply = (map :value args)) :type :bool}
+    :print (let [{:keys [value type]} (read-ast (first args))]
+             {:value (do (println value) value)
+              :type type})
+    :if (do
+          (println (first args))
+          (if (:value (read-ast (first args)))
+            (nth args 1 nil)
+            (nth args 2 nil)))
+    :define! (swap! state assoc (:value (nth args 0)) (nth args 1))
+    :set! (if (contains? @state (:value (nth args 0)))
+            (swap! state assoc (:value (nth args 0)) (read-ast (nth args 1)))
+            (throw (new Exception "YOU CANNOT SET! BEFORE DEFINE")))
+    :do (my-do args)
+    ;; DEFAULT
+    {:value nil :type :nil}))
 
 (defn execute-function [fun args]
   (if (= (get-in fun [:value :type]) :built-in)
@@ -73,10 +87,23 @@
 
 (comment (read-ast
           {:type :list
-           :value [{:type :word :value "if"}
-                   {:type :list :value [{:type :word :value "="}
+           :value [{:type :word :value :if}
+                   {:type :list :value [{:type :word :value :=}
                                         {:type :string :value "asd"}
                                         {:type :string :value "asd"}]}
                    {:type :string :value "asd"}
                    {:type :string :value "dsa"}]}))
+
+(comment
+  (require '[conneries.parser :refer [get-ast]])
+  (read-ast
+   (:value
+    (get-ast
+     "(do (print \"\nhello\n\") (print \"\nworld\n\"))"))))
+
+(comment (read-ast
+          {:type :list
+           :value [{:type :word :value :=}
+                   {:type :string :value "a"}
+                   {:type :string :value "b"}]}))
 

@@ -1,0 +1,2 @@
+(do (define! salutor "hello")
+    (print salutor))

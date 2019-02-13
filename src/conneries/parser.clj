@@ -65,3 +65,6 @@
        (<:> string-parser)
        (<:> keyword-parser)
        (<:> word-parser)))
+
+(defn get-ast [code]
+  (parse sth-parser code))
