@@ -63,15 +63,13 @@
     :- {:value (reduce #(- %1 (:value (read-ast %2)))
                        (:value (read-ast (first args)))
                        (rest args)) :type :number}
-    := {:value (apply = (map :value args)) :type :bool}
+    := {:value (apply = (map read-ast args)) :type :bool}
     :print (let [{:keys [value type]} (read-ast (first args))]
              {:value (do (println value) value)
               :type type})
-    :if (do
-          (println (first args))
-          (if (:value (read-ast (first args)))
-            (nth args 1 nil)
-            (nth args 2 nil)))
+    :if (if (:value (read-ast (first args)))
+          (read-ast (nth args 1 {:value nil :type :nil}))
+          (read-ast (nth args 2 {:value nil :type :nil})))
     :define! (swap! state assoc (:value (nth args 0)) (nth args 1))
     :set! (if (contains? @state (:value (nth args 0)))
             (swap! state assoc (:value (nth args 0)) (read-ast (nth args 1)))
@@ -94,12 +92,18 @@
                    {:type :string :value "asd"}
                    {:type :string :value "dsa"}]}))
 
+(comment (read-ast
+          {:type :list
+           :value [{:type :word :value :=}
+                   {:type :word :value :salutor}
+                   {:type :number :value 3}]}))
+
 (comment
   (require '[conneries.parser :refer [get-ast]])
   (read-ast
    (:value
     (get-ast
-     "(do (print \"\nhello\n\") (print \"\nworld\n\"))"))))
+     "(= salutor 3)"))))
 
 (comment (read-ast
           {:type :list
