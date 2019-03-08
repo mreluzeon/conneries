@@ -42,7 +42,8 @@
 (declare sth-parser)
 
 (def quotedlist-parser
-  (bind [_ (sym* \()
+  (bind [_ (sym* \')
+         _ (sym* \()
          vals (sep-by (many1 (one-of* " \n,\t")) sth-parser)
          _ (sym* \))]
         (return {:type :quotedlist
