@@ -21,7 +21,7 @@ lein uberjar
 (set! var 3)
 (if (= var 3)
     (print "set works!")
-    (print "set doesn't works")))
+    (print "set doesn't work")))
 ```
 
 ## License
