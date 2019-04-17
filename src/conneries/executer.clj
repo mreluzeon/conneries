@@ -5,7 +5,7 @@
   (vector name
           (hash-map :type :fn :value {:name name :type :built-in})))
 
-(def built-ins [:+ :- :if := :print :define! :set! :do :fn])
+(def built-ins [:+ :- :if := :print :define! :set! :do :fn :map])
 
 (def state
   (atom (apply hash-map
@@ -43,6 +43,7 @@
     (execute-function (read-ast func) args)))
 
 (defmethod read-ast :default [obj]
+  (print obj)
   (throw (new Exception "ERR")))
 
 (defn my-do [[x & xs]]
@@ -72,8 +73,19 @@
          :value {:args (nth args 0 nil)
                  :body (nth args 1 nil)
                  :type :user}}
+    :map {:type :quotedlist
+          :value (let [func-row (first args)
+                       list (read-ast (nth args 1 {:value nil :type :nil}))
+                       func (if (= (:type func-row) :word)
+                              (read-ast func-row)
+                              func-row)]
+                   (map #(execute-function func [%]) (:value list)))}
     ;; DEFAULT
     {:value nil :type :nil}))
+
+(comment (read-ast (:value (get-ast "(map (fn '(a) (plus-one a)) '(1 2 3 4))"))))
+(comment (read-ast (:value (get-ast "(map plus-one '(1 2 3 4))")))
+         (read-ast (:value (get-ast "plus-one"))))
 
 (defn nested-replace [elem rep coll]
   {:type (:type coll)
@@ -106,6 +118,7 @@
 
 (comment (read-ast (:value (get-ast "(define! plus-one (fn '(a) (+ a 1)))"))))
 (comment (read-ast (:value (get-ast "(plus-one 4)"))))
+(comment (execute-function (read-ast (:value (get-ast "plus-one"))) [{:type :number :value 5} {:type :number :value 4}]))
 
 (defn execute-function [fun args]
   (if (= (get-in fun [:value :type]) :built-in)
